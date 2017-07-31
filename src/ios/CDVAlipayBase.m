@@ -19,10 +19,10 @@
         [self failWithCallbackID:self.currentCallbackId withMessage:@"支付APP_ID设置错误"];
         return;
     }
-    
+
     //从参数中合成paymentString，绝不能把private_key放在客户端中，阿里给的例子太有误导性，新手很容易图简单直接拿来用，殊不知危险性有多高。为了保证安全性，支付字符串需要从服务端合成。
     NSMutableDictionary *args = [command argumentAtIndex:0];
-    
+
     //For the client-server based payment, the signed content must be extractly same. In other
     // words, the order of properties matters on both both sides.
     NSArray *sortedKeys = [args.allKeys sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:@"self" ascending:YES]]];
@@ -37,12 +37,18 @@
     [orderString deleteCharactersInRange:NSMakeRange([orderString length] -1, 1)];
     NSLog(@"orderString = %@", orderString);
 
-    
-    
+
+
     NSMutableString * schema = [NSMutableString string];
     [schema appendFormat:@"ALI%@", self.appId];
     NSLog(@"schema = %@",schema);
-    
+
+    // hack code 如果直接传入了 orderstring, 覆盖之前的配置
+    // Wade add 2017-07-31
+    if ([args objectForKey:@"orderString"] != nil) {
+        orderString = [args objectForKey:@"orderString"];
+    }
+
     [[AlipaySDK defaultService] payOrder:orderString fromScheme:schema callback:^(NSDictionary *resultDic) {
         [self successWithCallbackID:self.currentCallbackId messageAsDictionary:resultDic];
     }];
@@ -51,7 +57,7 @@
 - (void)handleOpenURL:(NSNotification *)notification
 {
     NSURL* url = [notification object];
-    
+
     if ([url.scheme rangeOfString:self.appId].length > 0)
     {
         //跳转支付宝钱包进行支付，处理支付结果

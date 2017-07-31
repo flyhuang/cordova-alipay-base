@@ -105,7 +105,12 @@ public class AliPay extends CordovaPlugin {
             buf.append('&');
         }
         if (buf.length() > 0) buf.deleteCharAt(buf.length() - 1);
-        return buf.toString();
+
+        if (args.getString("orderString") != null) {
+            return args.getString("orderString");
+        } else {
+            return buf.toString();
+        }
     }
 
     private JSONObject buildPaymentResult(Map<String, String> rawResult) throws JSONException {
